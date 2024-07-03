@@ -14,192 +14,375 @@ The Allora Network is a state-of-the-art protocol that uses decentralized AI and
 
 The AI/ML agents within the Allora Network use their data and algorithms to broadcast their predictions across a peer-to-peer network, and they ingest these predictions to assess the predictions from all other agents. The network consensus mechanism combines these predictions and assessments, and distributes rewards to the agents according to the quality of their predictions and assessments. This carefully designed incentive mechanism enables Allora to continually learn and improve, adjusting to the market as it evolves.
 
-## Documentation
-For the latest documentation, please go to https://docs.allora.network/
-
 ## Allorad Install
+> - Create a new wallet in Keplr
+>
+> - Connect to the on-chain Point Program [Dashboard](https://app.allora.network?ref=eyJyZWZlcnJlcl9pZCI6ImYxMTBlNmRjLTViNGEtNGEyNS05OTRhLWQzOGM1NWNlYjVmYiJ9)
+>
+> - In Campaigns tab you see 2 tasks, Check them
+> 
+> - In the tutorial we run a `Price Prediction Worker` with `topic 1` (Predicting `ETH` price every 24h)
+>
+> - Check the campaigns tasks steps to see what `topic` means
 
-Binary can be Installed for Linux or Mac (check releases for Windows)
 
-Specify a version to install if desired. 
+#
 
-```bash
-curl -sSL https://raw.githubusercontent.com/allora-network/allora-chain/main/install.sh | bash -s -- v0.0.8
+> Make sure to join off-chain community tasks on [Galxe](https://app.galxe.com/quest/AlloraNetwork) since they are as important as onchain tasks
+>
+> Team will add new tasks in it this week
+
+#
+
+<h1 align="center">Price Prediction Worker Node</h1>
+
+## System Requirements
+![image](https://github.com/0xmoei/allora-testnet/assets/90371338/56f1e0d2-4d59-436c-a0e0-183f9a082de4)
+
+## Install dependecies
+```console
+# Install Packages
+sudo apt update & sudo apt upgrade -y
+
+sudo apt install ca-certificates zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev curl git wget make jq build-essential pkg-config lsb-release libssl-dev libreadline-dev libffi-dev gcc screen unzip lz4 -y
+```
+```console
+# Install Python3
+sudo apt install python3
+python3 --version
+
+sudo apt install python3-pip
+pip3 --version
+```
+```console
+# Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+docker version
+
+# Install Docker-Compose
+VER=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+
+curl -L "https://github.com/docker/compose/releases/download/"$VER"/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+
+# Docker Permission to user
+sudo groupadd docker
+sudo usermod -aG docker $USER
+```
+```console
+# Install Go
+sudo rm -rf /usr/local/go
+curl -L https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | sudo tar -xzf - -C /usr/local
+echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> $HOME/.bash_profile
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> $HOME/.bash_profile
+source .bash_profile
+go version
 ```
 
-Ensure `~/.local/bin` is in your PATH.
+## Install Allorad: Wallet
+```console
+git clone https://github.com/allora-network/allora-chain.git
 
-`allorad` will be available.
+cd allora-chain && make all
 
-```sh
-git clone -b <latest-release-tag> https://github.com/allora-network/allora-chain.git
-cd allora-chain && make install
+allorad version
 ```
 
-Note: Depending on your `go` setup you may need to add `$GOPATH/bin` to your `$PATH`.
+## Add Wallet
+* You can use your keplr seed-phrase to recover your wallet or create a new one
+```console
+# Recover your wallet with seed-phrase
+allorad keys add testkey --recover
 
-```
-export PATH=$PATH:$(go env GOPATH)/bin
-```
+#OR
 
-## Run a Local Network
-To run a local node for testing purposes, execute the following commands:
-```
-make init
-allorad start
-```
-
-## Run a node
-`scripts/l1_node.sh`, you will see the log in the output of the script.
-
-*NOTE:* `scripts/l1_node.sh` will generate keys for the node. For production environments you need to use a proper keys storage, and follow secrets management best practices.
-
-## Run a node with docker compose
-
-### Run
-```
-docker compose pull
-docker compose up
+# Create a new wallet
+allorad keys add testkey
 ```
 
-run `docker compose up -d` to run detached.
+## Get Faucet
+> Connect to Allora [dashboard](https://app.allora.network?ref=eyJyZWZlcnJlcl9pZCI6ImYxMTBlNmRjLTViNGEtNGEyNS05OTRhLWQzOGM1NWNlYjVmYiJ9) to find your Allora address
+>
+> You can add Allora network to Keplr [here](https://explorer.edgenet.allora.network/wallet/suggest)
+> 
+> Get uAllo faucet [here](https://faucet.edgenet.allora.network/)
 
-*NOTE:* Don't forget to pull the images first, to ensure that you're using the latest images.
+![Screenshot_77](https://private-user-images.githubusercontent.com/90371338/341566252-9e1d6236-ff51-48a1-a9f6-1149c842a4d0.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTk5OTc2NDcsIm5iZiI6MTcxOTk5NzM0NywicGF0aCI6Ii85MDM3MTMzOC8zNDE1NjYyNTItOWUxZDYyMzYtZmY1MS00OGExLWE5ZjYtMTE0OWM4NDJhNGQwLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA3MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwNzAzVDA5MDIyN1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTdiZjYxZWFkYTZkM2RhOTUyMmMwMDE1YzQ4ZDA1ZTkwMGQyOGIzZDhiN2FiMTM0N2Q3NThlMjJlNWNhMWJjZGQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.fZBdy3t3ngFdu3hxSvciAQtF9ESe-eECnM_nYObs1WM)
 
-### See logs
-`docker compose logs -f`
+![Screenshot_76](https://private-user-images.githubusercontent.com/90371338/341566275-ff27b97d-d04f-42c4-aa1b-3fb666874098.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTk5OTc2NDcsIm5iZiI6MTcxOTk5NzM0NywicGF0aCI6Ii85MDM3MTMzOC8zNDE1NjYyNzUtZmYyN2I5N2QtZDA0Zi00MmM0LWFhMWItM2ZiNjY2ODc0MDk4LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA3MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwNzAzVDA5MDIyN1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTM0NTU1OTM4ZjJjNTM0YmJlMDJiZWVkOTk3OWNkY2FkMzBlNWQ3NGMyNGE0Y2NjZDcwMGY5MGYxMDJlNzQwZDEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.YVcGO8YtjorhSOQz7tIhq6uo3EGH8jfmdkCuMmyUQFk)
 
-## Call the node
-After the node is running you can exec RPC calls to it.
 
-For instance, check its status:
-`curl -so- http://localhost:26657/status | jq .`
+## Install Worker
+```console
+# Install
+cd $HOME && git clone https://github.com/allora-network/basic-coin-prediction-node
 
-With `curl -so- http://localhost:26657/status | jq .result.sync_info.catching_up` you can check if the node syncing or not.
+cd basic-coin-prediction-node
 
-## Run a validator
+mkdir worker-data
+mkdir head-data
 
-You can refer to the Allora documentation for detailled instructions on [running a full node](https://docs.allora.network/docs/running-a-full-node) and [staking a validator](https://docs.allora.network/docs/stake-a-validator).
+# Give certain permissions
+sudo chmod -R 777 worker-data
+sudo chmod -R 777 head-data
 
-1. Run and sync a full Allora node following [the instructions](https://docs.allora.network/docs/running-a-full-node).
+# Create head keys
+sudo docker run -it --entrypoint=bash -v ./head-data:/data alloranetwork/allora-inference-base:latest -c "mkdir -p /data/keys && (cd /data/keys && allora-keys)"
 
-2. Wait until the node is fully synced
+# Create worker keys
+sudo docker run -it --entrypoint=bash -v ./worker-data:/data alloranetwork/allora-inference-base:latest -c "mkdir -p /data/keys && (cd /data/keys && allora-keys)"
+```
+```console
+# Copy the head-id
+cat head-data/keys/identity
+```
+> This is your head-id , you need it in the next step
 
-Verify that your node has finished synching and it is caught up with the network:
+![Screenshot_78](https://github.com/0xmoei/allora-testnet/assets/90371338/5c8e4f77-6214-4f65-83e2-359a39aee966)
 
-`curl -so- http://localhost:26657/status | jq .result.sync_info.catching_up`
-Wait until you see the output: "false"
+## Connect to Allora Chain
+* Delete and create new `docker-compose.yml` file
+```console
+rm -rf docker-compose.yml && nano docker-compose.yml
+```
 
-3. Fund account.
+* Copy & Paste the following code in it
+* Replace `head-id` & `WALLET_SEED_PHRASE`
+```
+version: '3'
 
-`l1_node.sh` script generates keys, you can find created account information in `data/*.account_info`. Get the address from the file and fund, on testnets you can use faucet `https://faucet.${NETWORK}.allora.network`.
+services:
+  inference:
+    container_name: inference-basic-eth-pred
+    build:
+      context: .
+    command: python -u /app/app.py
+    ports:
+      - "8000:8000"
+    networks:
+      eth-model-local:
+        aliases:
+          - inference
+        ipv4_address: 172.22.0.4
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/inference/ETH"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    volumes:
+      - ./inference-data:/app/data
 
-4. Stake validator (detailled instructions [here](https://docs.allora.network/docs/stake-a-validator))
+  updater:
+    container_name: updater-basic-eth-pred
+    build: .
+    environment:
+      - INFERENCE_API_ADDRESS=http://inference:8000
+    command: >
+      sh -c "
+      while true; do
+        python -u /app/update_app.py;
+        sleep 24h;
+      done
+      "
+    depends_on:
+      inference:
+        condition: service_healthy
+    networks:
+      eth-model-local:
+        aliases:
+          - updater
+        ipv4_address: 172.22.0.5
 
-Here's an example with Values which starts with a stake of 10000000uallo.
+  worker:
+    container_name: worker-basic-eth-pred
+    environment:
+      - INFERENCE_API_ADDRESS=http://inference:8000
+      - HOME=/data
+    build:
+      context: .
+      dockerfile: Dockerfile_b7s
+    entrypoint:
+      - "/bin/bash"
+      - "-c"
+      - |
+        if [ ! -f /data/keys/priv.bin ]; then
+          echo "Generating new private keys..."
+          mkdir -p /data/keys
+          cd /data/keys
+          allora-keys
+        fi
+        # Change boot-nodes below to the key advertised by your head
+        allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
+          --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9011 \
+          --boot-nodes=/ip4/172.22.0.100/tcp/9010/p2p/head-id \
+          --topic=allora-topic-1-worker \
+          --allora-chain-key-name=testkey \
+          --allora-chain-restore-mnemonic='WALLET_SEED_PHRASE' \
+          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network/ \
+          --allora-chain-topic-id=1
+    volumes:
+      - ./worker-data:/data
+    working_dir: /data
+    depends_on:
+      - inference
+      - head
+    networks:
+      eth-model-local:
+        aliases:
+          - worker
+        ipv4_address: 172.22.0.10
 
-All the following command needs to be executed inside the validator container.
-Run `docker compose exec validator0 bash` to get shell of the validator.
+  head:
+    container_name: head-basic-eth-pred
+    image: alloranetwork/allora-inference-base-head:latest
+    environment:
+      - HOME=/data
+    entrypoint:
+      - "/bin/bash"
+      - "-c"
+      - |
+        if [ ! -f /data/keys/priv.bin ]; then
+          echo "Generating new private keys..."
+          mkdir -p /data/keys
+          cd /data/keys
+          allora-keys
+        fi
+        allora-node --role=head --peer-db=/data/peerdb --function-db=/data/function-db  \
+          --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9010 --rest-api=:6000
+    ports:
+      - "6000:6000"
+    volumes:
+      - ./head-data:/data
+    working_dir: /data
+    networks:
+      eth-model-local:
+        aliases:
+          - head
+        ipv4_address: 172.22.0.100
 
-You can change `--moniker=...` with a human readable name you choose for your validator.
-and `--from=` - is the account name in the keyring, you can list all availble keys with `allorad --home=$APP_HOME keys --keyring-backend=test list`
 
-Create stake info file:
-```bash
-cat > stake-validator.json << EOF
+networks:
+  eth-model-local:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+
+volumes:
+  inference-data:
+  worker-data:
+  head-data:
+```
+To save: CTRL+X+Y Enter
+
+## Run worker
+```console
+docker compose build
+docker compose up -d
+```
+
+## Check your node status
+### Check running docker containers
+```console
+docker ps
+```
+![Screenshot_81](https://github.com/0xmoei/allora-testnet/assets/90371338/9565560a-6884-42f6-899b-7920eca43ef0)
+
+Replace `CONTAINER_ID` with the id of your docker containers
+```console
+docker logs -f CONTAINER_ID
+```
+> Success: register node Tx Hash:=82BF67E2E1247B226B8C5CFCF3E4F41076909ADABF3852C468D087D94BD9FC3B
+
+![Screenshot_80](https://github.com/0xmoei/allora-testnet/assets/90371338/cefe126e-4ecb-4af3-9444-4e5e014fed52)
+
+
+### Check Worker node:
+```console
+curl --location 'http://localhost:6000/api/v1/functions/execute' \
+--header 'Content-Type: application/json' \
+--data '{
+    "function_id": "bafybeigpiwl3o73zvvl6dxdqu7zqcub5mhg65jiky2xqb4rdhfmikswzqm",
+    "method": "allora-inference-function.wasm",
+    "parameters": null,
+    "topic": "1",
+    "config": {
+        "env_vars": [
+            {
+                "name": "BLS_REQUEST_PATH",
+                "value": "/api"
+            },
+            {
+                "name": "ALLORA_ARG_PARAMS",
+                "value": "ETH"
+            },
+            {
+                "name": "ALLORA_BLOCK_HEIGHT_CURRENT",
+                "value": "null"
+            }
+        ],
+        "number_of_nodes": -1,
+        "timeout": 2
+    }
+}' | jq
+```
+Response:
+```
 {
-    "pubkey": $(allorad --home=$APP_HOME comet show-validator),
-    "amount": "1000000uallo",
-    "moniker": "validator0",
-    "commission-rate": "0.1",
-    "commission-max-rate": "0.2",
-    "commission-max-change-rate": "0.01",
-    "min-self-delegation": "1"
-}
-EOF
-```
-
-Stake the validator
-```bash
-allorad tx staking create-validator ./stake-validator.json \
-    --chain-id=testnet \
-    --home="$APP_HOME" \
-    --keyring-backend=test \
-    --from=validator0
-```
-The command will output tx hash, you can check its status in the explorer: `https://explorer.testnet.allora.network:8443/allora-testnet/tx/$TX_HASH`
-
-
-5. Verify validator setup
-
-### Check that the validator node is registered and staked
-
-```bash
-VAL_PUBKEY=$(allorad --home=$APP_HOME comet show-validator | jq -r .key)
-allorad --home=$APP_HOME q staking validators -o=json | \
-    jq '.validators[] | select(.consensus_pubkey.value=="'$VAL_PUBKEY'")'
-```
-
-- this command should return you all the information about the validator. Similar to the following:
-```
-{
-  "operator_address": "allovaloper1n8t4ffvwstysveuf3ccx9jqf3c6y7kte48qcxm",
-  "consensus_pubkey": {
-    "type": "tendermint/PubKeyEd25519",
-    "value": "gOl6fwPc19BtkmiOGjjharfe6eyniaxdkfyqiko3/cQ="
-  },
-  "status": 3,
-  "tokens": "1000000",
-  "delegator_shares": "1000000000000000000000000",
-  "description": {
-    "moniker": "val2"
-  },
-  "unbonding_time": "1970-01-01T00:00:00Z",
-  "commission": {
-    "commission_rates": {
-      "rate": "100000000000000000",
-      "max_rate": "200000000000000000",
-      "max_change_rate": "10000000000000000"
-    },
-    "update_time": "2024-02-26T22:50:31.187119394Z"
-  },
-  "min_self_delegation": "1"
+  "code": "200",
+  "request_id": "03001a39-4387-467c-aba1-c0e1d0d44f59",
+  "results": [
+    {
+      "result": {
+        "stdout": "{\"value\":\"2564.021586281073\"}",
+        "stderr": "",
+        "exit_code": 0
+      },
+      "peers": [
+        "12D3KooWG8dHctRt6ctakJfG5masTnLaKM6xkudoR5BxLDRSrgVt"
+      ],
+      "frequency": 100
+    }
+  ],
+  "cluster": {
+    "peers": [
+      "12D3KooWG8dHctRt6ctakJfG5masTnLaKM6xkudoR5BxLDRSrgVt"
+    ]
+  }
 }
 ```
-### Check the voting power of your validator node
-*NOTE:* please allow 30-60 seconds for the output to be updated
 
-`allorad --home=$APP_HOME status | jq -r '.validator_info.voting_power'`
-- Output should be > 0
-
-## Unstaking/unbounding  a validator
-
-If you need to delete a validator from the chain, you just need to unbound the stake.
-
-```bash
-
-allorad --home="$APP_HOME" \
-  tx staking unbond ${VALIDATOR_OPERATOR_ADDRESS} \
-  ${STAKE_AMOUNT}uallo --from ${VALIDATOR_ACCOUNT_KEY_NAME} \
-   --keyring-backend=test --chain-id ${NETWORK}
+### Check Updater node:
+```console
+curl http://localhost:8000/update
+```
+Response:
+```
+0
 ```
 
-## Run Integration Tests
-
-To run integration tests, execute the following commands:
-
-```bash
-bash test/local_testnet_l1.sh
-INTEGRATION=TRUE go test -timeout 10m ./test/integration/ -v
+### Check Inference node:
+```console
+curl http://localhost:8000/inference/ETH
+```
+Response:
+```
+{"value":"2564.021586281073"}
 ```
 
-## Run Stress Tests
-
-To run stress tests, execute the following commands:
-
-```bash
-bash test/local_testnet_l1.sh
-STRESS_TEST=true RPC_MODE="RandomBasedOnDeterministicSeed" RPC_URLS="http://localhost:26657,http://localhost:26658,http://localhost:26659" SEED=1 MAX_REPUTERS_PER_TOPIC=2 REPUTERS_PER_ITERATION=2 EPOCH_LENGTH=12 FINAL_REPORT=TRUE MAX_WORKERS_PER_TOPIC=2 WORKERS_PER_ITERATION=1 TOPICS_MAX=2 TOPICS_PER_ITERATION=1 MAX_ITERATIONS=2 go test -v -timeout 0 -test.run TestStressTestSuite ./test/stress
+### Check Docker containers
+```console
+docker ps
 ```
 
-options for RPC Modes include "RandomBasedOnDeterministicSeed" "RoundRobin" and "SingleRpc"
+
+Follow me on X! [youngprince.nft](https://twitter.com/princ3_young)
